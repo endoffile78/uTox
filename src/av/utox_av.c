@@ -418,11 +418,7 @@ static void utox_av_incoming_frame_a(ToxAV *UNUSED(av), uint32_t friend_number, 
                                      uint8_t channels, uint32_t sample_rate, void *UNUSED(userdata))
 {
     // LOG_TRACE("uToxAv", "Incoming audio frame for friend %u " , friend_number);
-#ifdef NATIVE_ANDROID_AUDIO
-    audio_play(friend_number, pcm, sample_count, channels);
-#else
     sourceplaybuffer(friend_number, pcm, sample_count, channels, sample_rate);
-#endif
 }
 
 static void utox_av_incoming_frame_v(ToxAV *UNUSED(toxAV), uint32_t friend_number, uint16_t width, uint16_t height,
