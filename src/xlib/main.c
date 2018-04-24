@@ -632,45 +632,6 @@ void config_osdefaults(UTOX_SAVE *r) {
     r->window_height = DEFAULT_HEIGHT;
 }
 
-static void atom_init(void) {
-    wm_protocols     = XInternAtom(display, "WM_PROTOCOLS", 0);
-    wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", 0);
-    XA_CLIPBOARD     = XInternAtom(display, "CLIPBOARD", 0);
-    XA_NET_NAME      = XInternAtom(display, "_NET_WM_NAME", 0);
-    XA_UTF8_STRING   = XInternAtom(display, "UTF8_STRING", 1);
-
-    if (XA_UTF8_STRING == None) {
-        XA_UTF8_STRING = XA_STRING;
-    }
-    targets = XInternAtom(display, "TARGETS", 0);
-
-    XA_INCR = XInternAtom(display, "INCR", false);
-
-    XdndAware      = XInternAtom(display, "XdndAware", false);
-    XdndEnter      = XInternAtom(display, "XdndEnter", false);
-    XdndLeave      = XInternAtom(display, "XdndLeave", false);
-    XdndPosition   = XInternAtom(display, "XdndPosition", false);
-    XdndStatus     = XInternAtom(display, "XdndStatus", false);
-    XdndDrop       = XInternAtom(display, "XdndDrop", false);
-    XdndSelection  = XInternAtom(display, "XdndSelection", false);
-    XdndDATA       = XInternAtom(display, "XdndDATA", false);
-    XdndActionCopy = XInternAtom(display, "XdndActionCopy", false);
-
-    XA_URI_LIST = XInternAtom(display, "text/uri-list", false);
-    XA_PNG_IMG  = XInternAtom(display, "image/png", false);
-
-    XRedraw = XInternAtom(display, "XRedraw", false);
-}
-
-static void cursors_init(void) {
-    cursors[CURSOR_NONE]     = XCreateFontCursor(display, XC_left_ptr);
-    cursors[CURSOR_HAND]     = XCreateFontCursor(display, XC_hand2);
-    cursors[CURSOR_TEXT]     = XCreateFontCursor(display, XC_xterm);
-    cursors[CURSOR_SELECT]   = XCreateFontCursor(display, XC_crosshair);
-    cursors[CURSOR_ZOOM_IN]  = XCreateFontCursor(display, XC_target);
-    cursors[CURSOR_ZOOM_OUT] = XCreateFontCursor(display, XC_target);
-}
-
 static void signal_handler(int signal)
 {
     LOG_INFO("XLIB MAIN", "Got signal: %s (%i)", strsignal(signal), signal);
