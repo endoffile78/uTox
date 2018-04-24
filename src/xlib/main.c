@@ -660,11 +660,6 @@ int main(int argc, char *argv[]) {
                         "Updates are managed by your distro's package manager.\n");
     }
 
-    if (!ui_init(settings.window_width, settings.window_height)) {
-        LOG_ERR("XLIB", "Could not initialize ui.");
-        return 3;
-    }
-
     struct sigaction action;
     action.sa_handler = &signal_handler;
 
@@ -675,6 +670,16 @@ int main(int argc, char *argv[]) {
 
     // start toxcore thread
     thread(toxcore_thread, NULL);
+
+    if (!ui_init(settings.window_width, settings.window_height)) {
+        LOG_ERR("XLIB", "Could not initialize ui.");
+        return 3;
+    }
+
+    //kill the audio/video and toxcore thread
+    LOG_DEBUG("XLIB", "Killing threads");
+    postmessage_utoxav(UTOXAV_KILL, 0, 0, NULL);
+    postmessage_toxcore(TOX_KILL, 0, 0, NULL);
 
     // wait for tox_thread to exit
     while (tox_thread_init) {
