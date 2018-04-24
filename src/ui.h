@@ -200,4 +200,6 @@ double ui_scale;
 #define TIME_WIDTH_LONG 60
 #define NAME_OFFSET 14
 
+bool ui_init(int width, int height);
+
 #endif

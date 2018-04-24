@@ -679,18 +679,6 @@ static void signal_handler(int signal)
 
 #include "../ui/dropdown.h" // this is for dropdown.language TODO provide API
 int main(int argc, char *argv[]) {
-    if (!XInitThreads()) {
-        LOG_FATAL_ERR(EXIT_FAILURE, "XLIB MAIN", "XInitThreads failed.");
-    }
-    if (!native_window_init()) {
-        return 2;
-    }
-    initfonts();
-
-    #ifdef HAVE_DBUS
-    LOG_INFO("XLIB MAIN", "Compiled with dbus support!");
-    #endif
-
     int8_t should_launch_at_startup;
     int8_t set_show_window;
     bool   skip_updater;
@@ -702,7 +690,6 @@ int main(int argc, char *argv[]) {
     // We need to parse_args before calling utox_init()
     utox_init();
 
-
     if (should_launch_at_startup == 1 || should_launch_at_startup == -1) {
         LOG_NOTE("XLIB", "Start on boot not supported on this OS, please use your distro suggested method!\n");
     }
@@ -712,31 +699,10 @@ int main(int argc, char *argv[]) {
                         "Updates are managed by your distro's package manager.\n");
     }
 
-    LOG_INFO("XLIB MAIN", "Setting theme to:\t%d", settings.theme);
-    theme_load(settings.theme);
-
-    XSetErrorHandler(hold_x11s_hand);
-
-    XIM xim;
-    setlocale(LC_ALL, "");
-    XSetLocaleModifiers("");
-    if ((xim = XOpenIM(display, 0, 0, 0)) == NULL) {
-        LOG_ERR("XLIB", "Cannot open input method");
+    if (!ui_init(settings.window_width, settings.window_height)) {
+        LOG_ERR("XLIB", "Could not initialize ui.");
+        return 3;
     }
-
-    atom_init();
-
-    native_window_create_main(settings.window_x, settings.window_y, settings.window_width, settings.window_height, argv, argc);
-    main_window.gc = DefaultGC(display, def_screen_num);
-    main_window.drawbuf = XCreatePixmap(display, main_window.window, settings.window_width, settings.window_height, default_depth);
-
-    /* choose available libraries for optional UI stuff */
-    if (!(libgtk = ugtk_load())) {
-        // try Qt
-    }
-
-    /* catch WM_DELETE_WINDOW */
-    XSetWMProtocols(display, main_window.window, &wm_delete_window, 1);
 
     struct sigaction action;
     action.sa_handler = &signal_handler;
@@ -746,159 +712,8 @@ int main(int argc, char *argv[]) {
     sigaction(SIGHUP, &action, NULL);
     sigaction(SIGTERM, &action, NULL);
 
-    /* set drag and drog version */
-    Atom dndversion = 3;
-    XChangeProperty(display, main_window.window, XdndAware, XA_ATOM, 32, PropModeReplace, (uint8_t *)&dndversion, 1);
-
-    /* initialize fontconfig */
-    loadfonts();
-    setfont(FONT_TEXT);
-
-    cursors_init();
-
-    ui_rescale(0);
-
-    /* */
-    XGCValues gcval;
-    gcval.foreground     = XWhitePixel(display, 0);
-    gcval.function       = GXxor;
-    gcval.background     = XBlackPixel(display, 0);
-    gcval.plane_mask     = gcval.background ^ gcval.foreground;
-    gcval.subwindow_mode = IncludeInferiors;
-
-    /* GC for the */
-    scr_grab_window.gc = XCreateGC(display, RootWindow(display, def_screen_num), GCFunction | GCForeground | GCBackground | GCSubwindowMode,
-                       &gcval);
-
-    XWindowAttributes attr;
-    XGetWindowAttributes(display, root_window, &attr);
-
-    main_window.pictformat = XRenderFindVisualFormat(display, attr.visual);
-    // XRenderPictFormat *pictformat = XRenderFindStandardFormat(display, PictStandardA8);
-
-    /* Xft draw context/color */
-    main_window.renderpic = XRenderCreatePicture(display, main_window.drawbuf, main_window.pictformat, 0, NULL);
-
-
-    XRenderColor xrcolor = { 0,0,0,0 };
-    main_window.colorpic = XRenderCreateSolidFill(display, &xrcolor);
-
-    if (set_show_window) {
-        if (set_show_window == 1) {
-            settings.start_in_tray = 0;
-        } else if (set_show_window == -1) {
-            settings.start_in_tray = 1;
-        }
-    }
-
-    /* make the window visible */
-    if (settings.start_in_tray) {
-        togglehide();
-    } else {
-        XMapWindow(display, main_window.window);
-    }
-
-    if (xim) {
-        if ((xic = XCreateIC(xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, main_window.window,
-                             XNFocusWindow, main_window.window, NULL))) {
-            XSetICFocus(xic);
-        } else {
-            LOG_ERR("XLIB", "Cannot open input method");
-            XCloseIM(xim);
-            xim = 0;
-        }
-    }
-
-    /* set the width/height of the drawing region */
-    ui_size(settings.window_width, settings.window_height);
-
-    create_tray_icon();
-    /* Registers the app in the Unity MM */
-    #ifdef UNITY
-    unity_running = is_unity_running();
-    if (unity_running) {
-        mm_register();
-    }
-    #endif
-
-    /* draw */
-    native_window_set_target(&main_window);
-    panel_draw(&panel_root, 0, 0, settings.window_width, settings.window_height);
-
     // start toxcore thread
     thread(toxcore_thread, NULL);
-
-    /* event loop */
-    while (!shutdown) {
-        XEvent event;
-        XNextEvent(display, &event);
-        if (!doevent(event)) {
-            break;
-        }
-
-        if (XPending(display)) {
-            continue;
-        }
-
-        if (_redraw) {
-            native_window_set_target(&main_window);
-            panel_draw(&panel_root, 0, 0, settings.window_width, settings.window_height);
-            _redraw = 0;
-        }
-    }
-
-    postmessage_utoxav(UTOXAV_KILL, 0, 0, NULL);
-    postmessage_toxcore(TOX_KILL, 0, 0, NULL);
-
-    /* free client thread stuff */
-    if (libgtk) {
-    }
-
-    destroy_tray_icon();
-
-    Window       root_return, child_return;
-    int          x_return, y_return;
-    unsigned int width_return, height_return, i;
-    XGetGeometry(display, main_window.window, &root_return, &x_return, &y_return, &width_return, &height_return, &i, &i);
-
-    XTranslateCoordinates(display, main_window.window, root_return, 0, 0, &x_return, &y_return, &child_return);
-
-    UTOX_SAVE d = {
-        .window_x      = x_return < 0 ? 0 : x_return,
-        .window_y      = y_return < 0 ? 0 : y_return,
-        .window_width  = width_return,
-        .window_height = height_return,
-    };
-
-    config_save(&d);
-
-    FcFontSetSortDestroy(fs);
-    freefonts();
-
-    XFreePixmap(display, main_window.drawbuf);
-
-    XFreeGC(display, scr_grab_window.gc);
-
-    XRenderFreePicture(display, main_window.renderpic);
-    XRenderFreePicture(display, main_window.colorpic);
-
-    if (xic) {
-        XDestroyIC(xic);
-    }
-
-    if (xim) {
-        XCloseIM(xim);
-    }
-
-    XDestroyWindow(display, main_window.window);
-    XCloseDisplay(display);
-
-/* Unregisters the app from the Unity MM */
-#ifdef UNITY
-    if (unity_running) {
-        mm_unregister();
-    }
-#endif
 
     // wait for tox_thread to exit
     while (tox_thread_init) {

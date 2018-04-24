@@ -28,6 +28,9 @@
 #include "ui/text.h"
 #include "ui/tooltip.h"
 
+#include <string.h>
+#include <ui.h>
+
 /* These remain for legacy reasons, PANEL_MAIN calls these by default when not given it's own function to call */
 static void background_draw(PANEL *UNUSED(p), int UNUSED(x), int UNUSED(y), int UNUSED(width), int UNUSED(height)) {
     return;
@@ -713,4 +716,40 @@ bool panel_mleave(PANEL *p) {
     }
 
     return draw;
+}
+
+static int ui_on_quit(uiWindow *win, void *data){
+    uiControlDestroy(uiControl(win));
+    uiQuit();
+    return 0;
+}
+
+static int ui_should_quit(void *data){
+    uiWindow *window = (uiWindow *)data;
+    uiControlDestroy(uiControl(window));
+    return 1;
+}
+
+bool ui_init(int width, int height){
+    uiInitOptions o;
+	memset(&o, 0, sizeof (uiInitOptions));
+
+	const char *err = uiInit(&o);
+	if (err != NULL) {
+        LOG_ERR("UI", "Error initializing ui. Error string: %s", err);
+		uiFreeInitError(err);
+		return false;
+	}
+
+	uiWindow *mainwin = uiNewWindow("uTox", width, height, 1);
+	uiWindowSetMargined(mainwin, 1);
+	uiWindowOnClosing(mainwin, ui_on_quit, NULL);
+
+	uiOnShouldQuit(ui_should_quit, mainwin);
+
+	uiControlShow(uiControl(mainwin));
+	uiMain();
+	uiUninit();
+
+    return true;
 }
