@@ -1,19 +1,13 @@
-set(libui_INCLUDE_DIRS)
-set(libui_LIBRARIES)
+FIND_PATH(LIBUI_INCLUDE_DIR NAMES ui.h)
+FIND_LIBRARY(LIBUI_LIBRARY NAMES libui.so)
 
-find_path(libui_INCLUDE_DIR ui.h)
-find_library(libui_LIBRARY libui)
+INCLUDE(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(libui
+                                  DEFAULT_MSG
+                                  LIBUI_LIBRARY
+                                  LIBUI_INCLUDE_DIR)
 
-if(libui_INCLUDE_DIR AND libui_LIBRARY)
-    set(libui_FOUND TRUE)
-    list(APPEND libui_INCLUDE_DIRS "${libui_INCLUDE_DIR}")
-    list(APPEND libui_LIBRARIES "${libui_LIBRARY}")
-endif()
+MARK_AS_ADVANCED(LIBUI_INCLUDE_DIR LIBUI_LIBRARY)
 
-list(REMOVE_DUPLICATES libui_INCLUDE_DIRS)
-list(REMOVE_DUPLICATES libui_LIBRARIES)
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(libui
-  FOUND_VAR libui_FOUND
-  REQUIRED_VARS libui_INCLUDE_DIRS libui_LIBRARIES)
+SET(LIBUI_INCLUDE_DIRS "${LIBUI_INCLUDE_DIR}")
+SET(LIBUI_LIBRARIES "${LIBUI_LIBRARY}")

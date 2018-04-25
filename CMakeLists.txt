@@ -276,8 +276,8 @@ find_package(libsodium REQUIRED)
 include_directories(${LIBSODIUM_INCLUDE_DIRS})
 set(LIBRARIES ${LIBRARIES} ${LIBSODIUM_LIBRARIES})
 
-# find_package(libui REQUIRED) #TODO: Make this work
-# include_directories(${LIBUI_INCLUDE_DIRS})
+find_package(libui REQUIRED)
+include_directories(${LIBUI_INCLUDE_DIRS})
 
 include_directories(SYSTEM third-party/stb)
 include_directories(SYSTEM third-party/minini/dev)
@@ -356,7 +356,6 @@ add_executable(utox ${GUI_TYPE}
     src/window.c
     third-party/minini/dev/minIni.c
     third-party/qrcodegen/c/qrcodegen.c
-    /usr/include/ui.h
 
     ${WINDOWS_ICON}
     ${APPLE_FILES}
@@ -366,12 +365,12 @@ target_link_libraries(utox
     utoxAV
     utoxNATIVE
     utoxUI
+    ${LIBUI_LIBRARIES}
     ${LIBTOX_LIBRARIES}
     ${LIBRARIES}
     vpx
     pthread
     m
-    /usr/lib/libui.so
 )
 
 set_property(TARGET utox PROPERTY C_STANDARD 11)
