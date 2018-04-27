@@ -37,6 +37,23 @@
 
 char *entry_password_text = NULL;
 
+static UTOX_I18N_STR themedrops[] = {
+    STR_THEME_DEFAULT,
+    STR_THEME_LIGHT,
+    STR_THEME_DARK,
+    STR_THEME_HIGHCONTRAST,
+    STR_THEME_CUSTOM,
+    STR_THEME_ZENBURN,
+    STR_THEME_SOLARIZED_LIGHT,
+    STR_THEME_SOLARIZED_DARK,
+};
+
+static UTOX_I18N_STR dpidrops[] = {
+    STR_DPI_TINY, STR_DPI_060,   STR_DPI_070, STR_DPI_080, STR_DPI_090, STR_DPI_NORMAL, STR_DPI_110,
+    STR_DPI_120,  STR_DPI_130,   STR_DPI_140, STR_DPI_BIG, STR_DPI_160, STR_DPI_170,    STR_DPI_180,
+    STR_DPI_190,  STR_DPI_LARGE, STR_DPI_210, STR_DPI_220, STR_DPI_230, STR_DPI_240,    STR_DPI_HUGE,
+};
+
 /* These remain for legacy reasons, PANEL_MAIN calls these by default when not given it's own function to call */
 static void background_draw(PANEL *UNUSED(p), int UNUSED(x), int UNUSED(y), int UNUSED(width), int UNUSED(height)) {
     return;
@@ -775,6 +792,34 @@ static uiControl *settings_profile_page(void) {
     return uiControl(vbox);
 }
 
+static void cbo_theme_on_select(uiCombobox *combobox, void *UNUSED(data)){
+    settings.theme = uiComboboxSelected(combobox);
+}
+
+static void cbo_dpi_on_select(uiCombobox *UNUSED(combobox), void *UNUSED(data)){
+    //TODO: implement this
+}
+
+static void chk_history_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.logging_enabled = uiCheckboxChecked(checkbox);
+}
+
+static void chk_close_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.close_to_tray = uiCheckboxChecked(checkbox);
+}
+
+static void chk_start_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.start_in_tray = uiCheckboxChecked(checkbox);
+}
+
+static void chk_startup_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.start_with_system = uiCheckboxChecked(checkbox);
+}
+
+static void chk_mini_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.use_mini_flist = uiCheckboxChecked(checkbox);
+}
+
 static uiControl *settings_interface_page(void) {
     uiBox *vbox = uiNewVerticalBox();
     uiBoxSetPadded(vbox, 1);
@@ -786,32 +831,63 @@ static uiControl *settings_interface_page(void) {
 
     //TODO: theme and dpi dropdown, currently libui doesn't have support for either
     uiCombobox *cbo_theme = uiNewCombobox();
+    for (size_t i = 0; i < COUNTOF(themedrops); i++){
+        char *str = SPTRFORLANG(settings.language, themedrops[i])->str;
+        uiComboboxAppend(cbo_theme, str);
+    }
+    uiComboboxOnSelected(cbo_theme, cbo_theme_on_select, NULL);
     uiBoxAppend(hbox, uiControl(cbo_theme), 0);
 
     uiCombobox *cbo_dpi = uiNewCombobox();
+    for (size_t i = 0; i < COUNTOF(dpidrops); i++) {
+        char *str = SPTRFORLANG(settings.language, dpidrops[i])->str;
+        uiComboboxAppend(cbo_dpi, str);
+    }
+    uiComboboxOnSelected(cbo_dpi, cbo_dpi_on_select, NULL);
     uiBoxAppend(hbox, uiControl(cbo_dpi), 0);
 
     uiCheckbox *chk_history = uiNewCheckbox(S(SAVE_CHAT_HISTORY));
     uiCheckboxSetChecked(chk_history, settings.logging_enabled);
+    uiCheckboxOnToggled(chk_history, chk_history_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_history), 0);
 
     uiCheckbox *chk_close = uiNewCheckbox(S(CLOSE_TO_TRAY));
     uiCheckboxSetChecked(chk_close, settings.close_to_tray);
+    uiCheckboxOnToggled(chk_close, chk_close_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_close), 0);
 
     uiCheckbox *chk_start = uiNewCheckbox(S(START_IN_TRAY));
     uiCheckboxSetChecked(chk_start, settings.start_in_tray);
+    uiCheckboxOnToggled(chk_start, chk_start_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_start), 0);
 
     uiCheckbox *chk_startup = uiNewCheckbox(S(AUTO_STARTUP));
     uiCheckboxSetChecked(chk_startup, settings.start_with_system);
+    uiCheckboxOnToggled(chk_startup, chk_startup_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_startup), 0);
 
     uiCheckbox *chk_mini = uiNewCheckbox(S(SETTINGS_UI_MINI_ROSTER));
     uiCheckboxSetChecked(chk_mini, settings.use_mini_flist);
+    uiCheckboxOnToggled(chk_mini, chk_mini_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_mini), 0);
 
     return uiControl(vbox);
+}
+
+static void chk_ptt_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.push_to_talk = uiCheckboxChecked(checkbox);
+}
+
+static void chk_filtering_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.audiofilter_enabled = uiCheckboxChecked(checkbox);
+}
+
+static void btn_audio_preview_clicked(uiButton *UNUSED(button), void *UNUSED(data)){
+    //TODO: implement this
+}
+
+static void btn_video_preview_clicked(uiButton *UNUSED(button), void *UNUSED(data)){
+    //TODO: implement this
 }
 
 static uiControl *settings_av_page(void) {
@@ -822,9 +898,13 @@ static uiControl *settings_av_page(void) {
     uiBoxSetPadded(hbox, 1);
 
     uiCheckbox *chk_ptt = uiNewCheckbox(S(PUSH_TO_TALK));
+    uiCheckboxSetChecked(chk_ptt, settings.push_to_talk);
+    uiCheckboxOnToggled(chk_ptt, chk_ptt_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_ptt), 0);
 
     uiCheckbox *chk_filtering = uiNewCheckbox(S(AUDIOFILTERING));
+    uiCheckboxSetChecked(chk_filtering, settings.audiofilter_enabled);
+    uiCheckboxOnToggled(chk_filtering, chk_filtering_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_filtering), 0);
 
     uiBoxAppend(vbox, uiControl(uiNewLabel(S(AUDIOINPUTDEVICE))), 0);
@@ -832,8 +912,8 @@ static uiControl *settings_av_page(void) {
     uiBoxAppend(vbox, uiControl(cbo_inputs), 0);
 
     uiBoxAppend(vbox, uiControl(uiNewLabel(S(AUDIOOUTPUTDEVICE))), 0);
-    uiCombobox *cbo_outpus = uiNewCombobox();
-    uiBoxAppend(vbox, uiControl(cbo_outpus), 0);
+    uiCombobox *cbo_outputs = uiNewCombobox();
+    uiBoxAppend(vbox, uiControl(cbo_outputs), 0);
 
     uiBoxAppend(vbox, uiControl(uiNewLabel(S(VIDEOFRAMERATE))), 0);
     uiEntry *entry_fps = uiNewEntry();
@@ -846,12 +926,30 @@ static uiControl *settings_av_page(void) {
     uiBoxAppend(vbox, uiControl(hbox), 0);
 
     uiButton *btn_audio_preview = uiNewButton(S(AUDIO_PREVIEW));
+    uiButtonOnClicked(btn_audio_preview, btn_audio_preview_clicked, NULL);
     uiBoxAppend(hbox, uiControl(btn_audio_preview), 0);
 
     uiButton *btn_video_preview = uiNewButton(S(VIDEO_PREVIEW));
+    uiButtonOnClicked(btn_video_preview, btn_video_preview_clicked, NULL);
     uiBoxAppend(hbox, uiControl(btn_video_preview), 0);
 
     return uiControl(vbox);
+}
+
+static void cbo_group_notification_on_selected(uiCombobox *combobox, void *UNUSED(data)){
+    settings.group_notifications = uiComboboxSelected(combobox);
+}
+
+static void chk_typing_notifications_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.send_typing_status = uiCheckboxChecked(checkbox);
+}
+
+static void chk_status_notifications_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.status_notifications = uiCheckboxChecked(checkbox);
+}
+
+static void chk_ringtone_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.ringtone_enabled = uiCheckboxChecked(checkbox);
 }
 
 static uiControl *settings_notifications_page(void) {
@@ -865,25 +963,53 @@ static uiControl *settings_notifications_page(void) {
 
     uiCheckbox *chk_ringtone = uiNewCheckbox(S(RINGTONE));
     uiCheckboxSetChecked(chk_ringtone, settings.ringtone_enabled);
+    uiCheckboxOnToggled(chk_ringtone, chk_ringtone_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_ringtone), 0);
 
     uiCheckbox *chk_status_notifications = uiNewCheckbox(S(STATUS_NOTIFICATIONS));
     uiCheckboxSetChecked(chk_status_notifications, settings.status_notifications);
+    uiCheckboxOnToggled(chk_status_notifications, chk_status_notifications_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_status_notifications), 0);
 
     uiCheckbox *chk_typing_notifications = uiNewCheckbox(S(SEND_TYPING_NOTIFICATIONS));
     uiCheckboxSetChecked(chk_typing_notifications, settings.send_typing_status);
+    uiCheckboxOnToggled(chk_typing_notifications, chk_typing_notifications_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_typing_notifications), 0);
 
     uiBoxAppend(vbox, uiControl(uiNewLabel(S(GROUP_NOTIFICATIONS))), 0);
     uiCombobox *cbo_group_notifications = uiNewCombobox();
-    uiComboboxAppend(cbo_group_notifications, "Off");
-    uiComboboxAppend(cbo_group_notifications, "Mentioned");
-    uiComboboxAppend(cbo_group_notifications, "On");
+    uiComboboxAppend(cbo_group_notifications, S(GROUP_NOTIFICATIONS_OFF));
+    uiComboboxAppend(cbo_group_notifications, S(GROUP_NOTIFICATIONS_MENTION));
+    uiComboboxAppend(cbo_group_notifications, S(GROUP_NOTIFICATIONS_ON));
     uiComboboxSetSelected(cbo_group_notifications, settings.group_notifications);
+    uiComboboxOnSelected(cbo_group_notifications, cbo_group_notification_on_selected, NULL);
     uiBoxAppend(vbox, uiControl(cbo_group_notifications), 0);
 
     return uiControl(vbox);
+}
+
+static void chk_ipv6_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.enable_ipv6 = uiCheckboxChecked(checkbox);
+}
+
+static void chk_udp_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.enable_udp = uiCheckboxChecked(checkbox);
+}
+
+static void chk_proxy_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.use_proxy = uiCheckboxChecked(checkbox);
+}
+
+static void chk_force_proxy_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.force_proxy = uiCheckboxChecked(checkbox);
+}
+
+static void chk_update_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.auto_update = uiCheckboxChecked(checkbox);
+}
+
+static void chk_block_requests_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+    settings.block_friend_requests = uiCheckboxChecked(checkbox);
 }
 
 static uiControl *settings_advanced_page(void) {
@@ -895,14 +1021,17 @@ static uiControl *settings_advanced_page(void) {
 
     uiCheckbox *chk_ipv6 = uiNewCheckbox(S(IPV6));
     uiCheckboxSetChecked(chk_ipv6, settings.enable_ipv6);
+    uiCheckboxOnToggled(chk_ipv6, chk_ipv6_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_ipv6), 0);
 
     uiCheckbox *chk_udp = uiNewCheckbox(S(UDP));
     uiCheckboxSetChecked(chk_udp, settings.enable_udp);
+    uiCheckboxOnToggled(chk_udp, chk_udp_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_udp), 0);
 
     uiCheckbox *chk_proxy = uiNewCheckbox(S(PROXY));
     uiCheckboxSetChecked(chk_proxy, settings.use_proxy);
+    uiCheckboxOnToggled(chk_proxy, chk_proxy_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_proxy), 0);
 
     uiBoxAppend(vbox, uiControl(hbox), 0);
@@ -920,14 +1049,17 @@ static uiControl *settings_advanced_page(void) {
 
     uiCheckbox *chk_force_proxy = uiNewCheckbox(S(PROXY_FORCE));
     uiCheckboxSetChecked(chk_force_proxy, settings.force_proxy);
+    uiCheckboxOnToggled(chk_force_proxy, chk_force_proxy_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_force_proxy), 0);
 
     uiCheckbox *chk_update = uiNewCheckbox(S(AUTO_UPDATE));
     uiCheckboxSetChecked(chk_update, settings.auto_update);
+    uiCheckboxOnToggled(chk_update, chk_update_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_update), 0);
 
     uiCheckbox *chk_block_requests = uiNewCheckbox(S(BLOCK_FRIEND_REQUESTS));
     uiCheckboxSetChecked(chk_block_requests, settings.block_friend_requests);
+    uiCheckboxOnToggled(chk_block_requests, chk_block_requests_toggle, NULL);
     uiBoxAppend(vbox, uiControl(chk_block_requests), 0);
 
     //TODO: do show password and nospam buttons
@@ -952,7 +1084,7 @@ uiControl *ui_settings_page(void){
     return uiControl(tabs);
 }
 
-static void button_submit_clicked(uiButton *UNUSED(button), void *data){
+static void btn_submit_clicked(uiButton *UNUSED(button), void *data){
     uiEntry *entry = (uiEntry *)data;
     entry_password_text = uiEntryText(entry);
 }
@@ -973,22 +1105,24 @@ uiControl *ui_password_page(void){
     uiGridSetPadded(grid, 1);
     uiBoxAppend(vbox, uiControl(grid), 0);
 
-    uiEntry *entry = uiNewPasswordEntry();
-    uiEntryOnChanged(entry, entry_password_on_change, NULL);
-    uiGridAppend(grid, uiControl(entry), 0, 0, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+    uiEntry *entry_password = uiNewPasswordEntry();
+    uiEntryOnChanged(entry_password, entry_password_on_change, NULL);
+    uiGridAppend(grid, uiControl(entry_password), 0, 0, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
 
     uiButton *submit = uiNewButton("Submit");
-    uiButtonOnClicked(submit, button_submit_clicked, entry);
+    uiButtonOnClicked(submit, btn_submit_clicked, entry_password);
     uiGridAppend(grid, uiControl(submit), 1, 0, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
 
     return uiControl(hbox);
 }
 
 static uiControl *sidebar_create_friend(FRIEND *f){
+    (void) f;
     return NULL;
 }
 
 static uiControl *sidebar_create_group(GROUPCHAT *g){
+    (void) g;
     return NULL;
 }
 
@@ -1035,11 +1169,11 @@ uiControl *ui_sidebar(void){
 }
 
 void ui_show_page(uiControl *control){
-
+    (void) control;
 }
 
 void ui_hide_page(uiControl *control){
-
+    (void) control;
 }
 
 bool ui_init(int width, int height){

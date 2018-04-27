@@ -634,6 +634,16 @@ int main(int argc, char *argv[]) {
         return 3;
     }
 
+    //TODO: get window position and dimensions
+    UTOX_SAVE d = {
+        .window_x      = 0,
+        .window_y      = 0,
+        .window_width  = settings.window_width,
+        .window_height = settings.window_height,
+    };
+
+    config_save(&d);
+
     //kill the audio/video and toxcore thread
     LOG_DEBUG("XLIB", "Killing threads.");
     postmessage_utoxav(UTOXAV_KILL, 0, 0, NULL);
