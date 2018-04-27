@@ -6,6 +6,7 @@
 #include "../langs/i18n_decls.h"
 #include "settings.h"
 
+#include <ui.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -200,6 +201,18 @@ double ui_scale;
 #define TIME_WIDTH_LONG 60
 #define NAME_OFFSET 14
 
+extern char *entry_password_text;
+
 bool ui_init(int width, int height);
+
+uiControl *ui_settings_page(void);
+
+uiControl *ui_password_page(void);
+
+uiControl *ui_sidebar(void);
+
+void ui_show_page(uiControl *control);
+
+void ui_hide_page(uiControl *control);
 
 #endif

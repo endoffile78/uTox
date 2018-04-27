@@ -475,50 +475,8 @@ static Picture generate_alpha_bitmask(const uint8_t *rgba_data, uint16_t width, 
     return picture;
 }
 
-/* Swaps out the PNG color order for the native color order */
-static void native_color_mask(uint8_t *data, uint32_t size, uint32_t mask_red, uint32_t mask_blue, uint32_t mask_green) {
-    uint8_t   red, blue, green;
-    uint32_t *dest;
-    for (uint32_t i = 0; i < size; i += 4) {
-        red   = (data + i)[0] & 0xFF;
-        green = (data + i)[1] & 0xFF;
-        blue  = (data + i)[2] & 0xFF;
-        dest = (uint32_t*)(data + i);
-        *dest  = (red | (red << 8) | (red << 16) | (red << 24)) & mask_red;
-        *dest |= (blue | (blue << 8) | (blue << 16) | (blue << 24)) & mask_blue;
-        *dest |= (green | (green << 8) | (green << 16) | (green << 24)) & mask_green;
-    }
-}
-
 NATIVE_IMAGE *utox_image_to_native(const UTOX_IMAGE data, size_t size, uint16_t *w, uint16_t *h, bool keep_alpha) {
-    int      width, height, bpp;
-    uint8_t *rgba_data = stbi_load_from_memory(data, size, &width, &height, &bpp, 4);
-    // we don't need to free this, that's done by XDestroyImage()
-
-    if (rgba_data == NULL || width == 0 || height == 0) {
-        return None; // invalid png data
-    }
-
-    uint32_t rgba_size = width * height * 4;
-    Picture alpha = (bpp == 4 && keep_alpha) ? generate_alpha_bitmask(rgba_data, width, height, rgba_size) : None;
-    native_color_mask(rgba_data, rgba_size, default_visual->red_mask, default_visual->blue_mask, default_visual->green_mask);
-
-    XImage *img = XCreateImage(display, default_visual, default_depth, ZPixmap, 0, (char *)rgba_data, width, height, 32, width * 4);
-    Picture rgb = ximage_to_picture(img, NULL);
-    XDestroyImage(img);
-
-    *w = width;
-    *h = height;
-
-    NATIVE_IMAGE *image = malloc(sizeof(NATIVE_IMAGE));
-    if (image == NULL) {
-        LOG_ERR("utox_image_to_native", "Could mot allocate memory for image." );
-        return NULL;
-    }
-    image->rgb   = rgb;
-    image->alpha = alpha;
-
-    return image;
+    return NULL;
 }
 
 
@@ -677,7 +635,7 @@ int main(int argc, char *argv[]) {
     }
 
     //kill the audio/video and toxcore thread
-    LOG_DEBUG("XLIB", "Killing threads");
+    LOG_DEBUG("XLIB", "Killing threads.");
     postmessage_utoxav(UTOXAV_KILL, 0, 0, NULL);
     postmessage_toxcore(TOX_KILL, 0, 0, NULL);
 

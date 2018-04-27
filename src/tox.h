@@ -24,6 +24,7 @@ typedef struct {
 
 typedef enum UTOX_ENC_ERR {
     UTOX_ENC_ERR_NONE,
+    UTOX_ENC_ERR_NULL_PASSWORD,
     UTOX_ENC_ERR_LENGTH,
     UTOX_ENC_ERR_BAD_PASS,
     UTOX_ENC_ERR_BAD_DATA,

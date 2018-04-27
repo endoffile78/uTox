@@ -1,9 +1,12 @@
 #include "ui.h"
 
 #include "flist.h"
+#include "friend.h"
+#include "groups.h"
 #include "inline_video.h"
 #include "macros.h"
 #include "messages.h"
+#include "self.h"
 #include "settings.h"
 
 #include "layout/background.h"
@@ -30,6 +33,8 @@
 
 #include <string.h>
 #include <ui.h>
+
+char *entry_password_text = NULL;
 
 /* These remain for legacy reasons, PANEL_MAIN calls these by default when not given it's own function to call */
 static void background_draw(PANEL *UNUSED(p), int UNUSED(x), int UNUSED(y), int UNUSED(width), int UNUSED(height)) {
@@ -718,7 +723,7 @@ bool panel_mleave(PANEL *p) {
     return draw;
 }
 
-static int ui_on_quit(uiWindow *win, void *data){
+static int ui_on_quit(uiWindow *win, void *UNUSED(data)){
     uiControlDestroy(uiControl(win));
     uiQuit();
     return 0;
@@ -728,6 +733,280 @@ static int ui_should_quit(void *data){
     uiWindow *window = (uiWindow *)data;
     uiControlDestroy(uiControl(window));
     return 1;
+}
+
+static uiControl *settings_profile_page(void) {
+    uiBox *vbox = uiNewVerticalBox();
+    uiBoxSetPadded(vbox, 1);
+
+    uiBox *hbox = uiNewHorizontalBox();
+    uiBoxSetPadded(hbox, 1);
+
+    uiBoxAppend(vbox, uiControl(uiNewLabel("Name")), 0);
+    uiEntry *entry_name = uiNewEntry();
+    uiBoxAppend(vbox, uiControl(entry_name), 0);
+
+    uiBoxAppend(vbox, uiControl(uiNewLabel("Status")), 0);
+    uiEntry *entry_status = uiNewEntry();
+    uiBoxAppend(vbox, uiControl(entry_status), 0);
+
+    uiBoxAppend(vbox, uiControl(uiNewLabel("Tox ID")), 0);
+    uiEntry *entry_id = uiNewEntry();
+    uiBoxAppend(vbox, uiControl(entry_id), 0);
+
+    uiBoxAppend(vbox, uiControl(hbox), 0);
+
+    //TODO: fix copy and show qrs buttons position
+    uiButton *btn_copy = uiNewButton("Copy ID");
+    uiBoxAppend(hbox, uiControl(btn_copy), 0);
+
+    uiButton *btn_show_qr = uiNewButton("Show QR");
+    uiBoxAppend(hbox, uiControl(btn_show_qr), 0);
+
+    uiBoxAppend(vbox, uiControl(uiNewLabel("Language")), 0);
+    uiCombobox *cbo_language = uiNewCombobox();
+    uiBoxAppend(vbox, uiControl(cbo_language), 0);
+
+    return uiControl(vbox);
+}
+
+static uiControl *settings_interface_page(void) {
+    uiBox *vbox = uiNewVerticalBox();
+    uiBoxSetPadded(vbox, 1);
+
+    uiBox *hbox = uiNewHorizontalBox();
+    uiBoxSetPadded(hbox, 1);
+
+    uiBoxAppend(vbox, uiControl(hbox), 0);
+
+    //TODO: theme and dpi dropdown, currently libui doesn't have support for either
+    uiCombobox *cbo_theme = uiNewCombobox();
+    uiBoxAppend(hbox, uiControl(cbo_theme), 0);
+
+    uiCombobox *cbo_dpi = uiNewCombobox();
+    uiBoxAppend(hbox, uiControl(cbo_dpi), 0);
+
+    uiCheckbox *chk_history = uiNewCheckbox("Save chat history");
+    uiBoxAppend(vbox, uiControl(chk_history), 0);
+
+    uiCheckbox *chk_close = uiNewCheckbox("Close to Tray");
+    uiBoxAppend(vbox, uiControl(chk_close), 0);
+
+    uiCheckbox *chk_start = uiNewCheckbox("Start in tray");
+    uiBoxAppend(vbox, uiControl(chk_start), 0);
+
+    uiCheckbox *chk_startup = uiNewCheckbox("Launch at system startup");
+    uiBoxAppend(vbox, uiControl(chk_startup), 0);
+
+    uiCheckbox *chk_mini = uiNewCheckbox("Use mini contact list");
+    uiBoxAppend(vbox, uiControl(chk_mini), 0);
+
+    return uiControl(vbox);
+}
+
+static uiControl *settings_av_page(void) {
+    uiBox *vbox = uiNewVerticalBox();
+    uiBoxSetPadded(vbox, 1);
+
+    uiBox *hbox = uiNewHorizontalBox();
+    uiBoxSetPadded(hbox, 1);
+
+    uiCheckbox *chk_ptt = uiNewCheckbox("Push to talk");
+    uiBoxAppend(vbox, uiControl(chk_ptt), 0);
+
+    uiCheckbox *chk_filtering = uiNewCheckbox("Audtio Fitlering");
+    uiBoxAppend(vbox, uiControl(chk_filtering), 0);
+
+    uiBoxAppend(vbox, uiControl(uiNewLabel("Audio Input Device")), 0);
+    uiCombobox *cbo_inputs = uiNewCombobox();
+    uiBoxAppend(vbox, uiControl(cbo_inputs), 0);
+
+    uiBoxAppend(vbox, uiControl(uiNewLabel("Audio Output Device")), 0);
+    uiCombobox *cbo_outpus = uiNewCombobox();
+    uiBoxAppend(vbox, uiControl(cbo_outpus), 0);
+
+    uiBoxAppend(vbox, uiControl(uiNewLabel("Video Frame Rate (FPS)")), 0);
+    uiEntry *entry_fps = uiNewEntry();
+    uiBoxAppend(vbox, uiControl(entry_fps), 0);
+
+    uiBoxAppend(vbox, uiControl(uiNewLabel("Video Frame Rate (FPS)")), 0);
+    uiCombobox *cbo_video = uiNewCombobox();
+    uiBoxAppend(vbox, uiControl(cbo_video), 0);
+
+    uiBoxAppend(vbox, uiControl(hbox), 0);
+
+    uiButton *btn_audio_preview = uiNewButton("Audio Preview");
+    uiBoxAppend(hbox, uiControl(btn_audio_preview), 0);
+
+    uiButton *btn_video_preview = uiNewButton("Video Preview");
+    uiBoxAppend(hbox, uiControl(btn_video_preview), 0);
+
+    return uiControl(vbox);
+}
+
+static uiControl *settings_notifications_page(void) {
+    uiBox *vbox = uiNewVerticalBox();
+    uiBoxSetPadded(vbox, 1);
+
+    uiBox *hbox = uiNewHorizontalBox();
+    uiBoxSetPadded(hbox, 1);
+
+    uiBoxAppend(vbox, uiControl(hbox), 0);
+
+    uiCheckbox *chk_ringtone = uiNewCheckbox("Ringtone");
+    uiBoxAppend(vbox, uiControl(chk_ringtone), 0);
+
+    uiCheckbox *chk_status_notifications = uiNewCheckbox("Status Notifications");
+    uiBoxAppend(vbox, uiControl(chk_status_notifications), 0);
+
+    uiCheckbox *chk_typing_notifications = uiNewCheckbox("Send typing notifications");
+    uiBoxAppend(vbox, uiControl(chk_typing_notifications), 0);
+
+    uiBoxAppend(vbox, uiControl(uiNewLabel("Group Notifications")), 0);
+    uiCombobox *cbo_group_notifications = uiNewCombobox();
+    uiBoxAppend(vbox, uiControl(cbo_group_notifications), 0);
+
+    return uiControl(vbox);
+}
+
+static uiControl *settings_advanced_page(void) {
+    uiBox *vbox = uiNewVerticalBox();
+    uiBoxSetPadded(vbox, 1);
+
+    uiBox *hbox = uiNewHorizontalBox();
+    uiBoxSetPadded(hbox, 1);
+
+    uiCheckbox *chk_ipv6 = uiNewCheckbox("IPv6");
+    uiBoxAppend(vbox, uiControl(chk_ipv6), 0);
+
+    uiCheckbox *chk_udp = uiNewCheckbox("UDP");
+    uiBoxAppend(vbox, uiControl(chk_udp), 0);
+
+    //TODO: Add IP and port textbox
+    uiCheckbox *chk_proxy = uiNewCheckbox("Proxy (SOCKS 5)");
+    uiBoxAppend(vbox, uiControl(chk_proxy), 0);
+
+    uiCheckbox *chk_force_proxy = uiNewCheckbox("Force uTox to always use proxy");
+    uiBoxAppend(vbox, uiControl(chk_force_proxy), 0);
+
+    uiCheckbox *chk_update = uiNewCheckbox("Automatically Update uTox");
+    uiBoxAppend(vbox, uiControl(chk_update), 0);
+
+    uiCheckbox *chk_block_requests = uiNewCheckbox("Block Friend Requests");
+    uiBoxAppend(vbox, uiControl(chk_block_requests), 0);
+
+    uiBoxAppend(vbox, uiControl(hbox), 0);
+
+    //TODO: do show password and nospam buttons
+
+    return uiControl(vbox);
+}
+
+uiControl *ui_settings_page(void){
+    uiTab *tabs = uiNewTab();
+
+    uiTabAppend(tabs, "Profile", settings_profile_page());
+    uiTabSetMargined(tabs, 0, 1);
+    uiTabAppend(tabs, "Interface", settings_interface_page());
+    uiTabSetMargined(tabs, 1, 1);
+    uiTabAppend(tabs, "Audio/Video", settings_av_page());
+    uiTabSetMargined(tabs, 2, 1);
+    uiTabAppend(tabs, "Notifications", settings_notifications_page());
+    uiTabSetMargined(tabs, 3, 1);
+    uiTabAppend(tabs, "Advanced", settings_advanced_page());
+    uiTabSetMargined(tabs, 4, 1);
+
+    return uiControl(tabs);
+}
+
+static void button_submit_clicked(uiButton *UNUSED(button), void *data){
+    uiEntry *entry = (uiEntry *)data;
+    entry_password_text = uiEntryText(entry);
+}
+
+static void entry_password_on_change(uiEntry *entry, void *UNUSED(data)){
+    entry_password_text = uiEntryText(entry);
+}
+
+uiControl *ui_password_page(void){
+    uiBox *vbox = uiNewVerticalBox();
+    uiBoxSetPadded(vbox, 1);
+
+    uiBox *hbox = uiNewHorizontalBox();
+    uiBoxSetPadded(hbox, 1);
+    uiBoxAppend(hbox, uiControl(vbox), 0);
+
+    uiGrid *grid = uiNewGrid();
+    uiGridSetPadded(grid, 1);
+    uiBoxAppend(vbox, uiControl(grid), 0);
+
+    uiEntry *entry = uiNewPasswordEntry();
+    uiEntryOnChanged(entry, entry_password_on_change, NULL);
+    uiGridAppend(grid, uiControl(entry), 0, 0, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+
+    uiButton *submit = uiNewButton("Submit");
+    uiButtonOnClicked(submit, button_submit_clicked, entry);
+    uiGridAppend(grid, uiControl(submit), 1, 0, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+
+    return uiControl(hbox);
+}
+
+static uiControl *sidebar_create_friend(FRIEND *f){
+    return NULL;
+}
+
+static uiControl *sidebar_create_group(GROUPCHAT *g){
+    return NULL;
+}
+
+uiControl *ui_sidebar(void){
+    uiBox *hbox = uiNewHorizontalBox();
+    uiBoxSetPadded(hbox, 1);
+
+    uiBox *vbox = uiNewVerticalBox();
+    uiBoxSetPadded(vbox, 1);
+    uiBoxAppend(hbox, uiControl(vbox), 0);
+
+    uiGrid *grid = uiNewGrid();
+    uiGridSetPadded(grid, 1);
+    uiBoxAppend(vbox, uiControl(grid), 0);
+
+    //TODO: add profile picutre, currently libui doesn't expose the uiImage control
+    uiLabel *name = uiNewLabel(self.name);
+    uiLabel *status = uiNewLabel(self.statusmsg);
+    uiGridAppend(grid, uiControl(name), 1, 0, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend(grid, uiControl(status), 1, 1, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+
+    uiButton *btn_contact_sort = uiNewButton("All Contacts");
+    uiGridAppend(grid, uiControl(btn_contact_sort), 0, 2, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+
+    for (int i = 0; i < self.friend_list_count; i++){
+        FRIEND *f = get_friend(i);
+        if (!f) {
+            continue;
+        }
+
+        sidebar_create_friend(f);
+    }
+
+    for (int i = 0; i < self.groups_list_count; i++) {
+        GROUPCHAT *g = get_group(i);
+        if (!g) {
+            continue;
+        }
+
+        sidebar_create_group(g);
+    }
+
+    return uiControl(hbox);
+}
+
+void ui_show_page(uiControl *control){
+
+}
+
+void ui_hide_page(uiControl *control){
+
 }
 
 bool ui_init(int width, int height){
@@ -741,14 +1020,18 @@ bool ui_init(int width, int height){
 		return false;
 	}
 
-	uiWindow *mainwin = uiNewWindow("uTox", width, height, 1);
-	uiWindowSetMargined(mainwin, 1);
-	uiWindowOnClosing(mainwin, ui_on_quit, NULL);
+	uiWindow *main_window = uiNewWindow("uTox", width, height, 1);
+	uiWindowSetMargined(main_window, 1);
+	uiWindowOnClosing(main_window, ui_on_quit, NULL);
 
-	uiOnShouldQuit(ui_should_quit, mainwin);
+	uiOnShouldQuit(ui_should_quit, main_window);
 
-	uiControlShow(uiControl(mainwin));
+    uiControl *settings_page = ui_settings_page();
+    uiWindowSetChild(main_window, uiControl(settings_page));
+	uiControlShow(uiControl(main_window));
+
 	uiMain();
+    LOG_DEBUG("UI", "Calling uiUninit.");
 	uiUninit();
 
     return true;

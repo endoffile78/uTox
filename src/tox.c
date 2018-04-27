@@ -18,6 +18,7 @@
 #include "av/utox_av.h"
 #include "av/video.h"
 
+#include "ui.h"
 
 #include "ui/edit.h"     // FIXME the toxcore thread shouldn't be interacting directly with the UI
 #include "ui/switch.h"   // FIXME the toxcore thread shouldn't be interacting directly with the UI
@@ -74,14 +75,18 @@ void postmessage_toxcore(uint8_t msg, uint32_t param1, uint32_t param2, void *da
 }
 
 static int utox_encrypt_data(void *clear_text, size_t clear_length, uint8_t *cypher_data) {
-    size_t passphrase_length = edit_profile_password.length;
+    if (!entry_password_text) {
+        return UTOX_ENC_ERR_NULL_PASSWORD;
+    }
+
+    size_t passphrase_length = strlen(entry_password_text);
 
     if (passphrase_length < 4) {
         return UTOX_ENC_ERR_LENGTH;
     }
 
     uint8_t passphrase[passphrase_length];
-    memcpy(passphrase, edit_profile_password.data, passphrase_length);
+    memcpy(passphrase, entry_password_text, passphrase_length);
     TOX_ERR_ENCRYPTION err = 0;
 
     tox_pass_encrypt((uint8_t *)clear_text, clear_length, (uint8_t *)passphrase, passphrase_length, cypher_data, &err);
@@ -94,14 +99,18 @@ static int utox_encrypt_data(void *clear_text, size_t clear_length, uint8_t *cyp
 }
 
 static int utox_decrypt_data(void *cypher_data, size_t cypher_length, uint8_t *clear_text) {
-    size_t passphrase_length = edit_profile_password.length;
+    if (!entry_password_text) {
+        return UTOX_ENC_ERR_NULL_PASSWORD;
+    }
+
+    size_t passphrase_length = strlen(entry_password_text);
 
     if (passphrase_length < 4) {
         return UTOX_ENC_ERR_LENGTH;
     }
 
     uint8_t passphrase[passphrase_length];
-    memcpy(passphrase, edit_profile_password.data, passphrase_length);
+    memcpy(passphrase, entry_password_text, passphrase_length);
     TOX_ERR_DECRYPTION err = 0;
     tox_pass_decrypt((uint8_t *)cypher_data, cypher_length, (uint8_t *)passphrase, passphrase_length, clear_text, &err);
 
@@ -222,7 +231,7 @@ void tox_settingschanged(void) {
     dropdown_list_clear(&dropdown_video);
 
     // send the reconfig message!
-    postmessage_toxcore(0, 1, 0, NULL);
+    postmessage_toxcore(0, 1, 0, NULL); //TODO: Magic numbers
 
     LOG_NOTE("Toxcore", "Restarting Toxcore");
     while (!tox_thread_init) {
@@ -275,13 +284,21 @@ static int load_toxcore_save(struct Tox_Options *options) {
 
             UTOX_ENC_ERR decrypt_err = utox_decrypt_data(raw_data, raw_length, clear_data);
             if (decrypt_err) {
-                if (decrypt_err == UTOX_ENC_ERR_LENGTH) {
-                    LOG_WARN("Toxcore", "Password too short!\r");
-                } else if (decrypt_err == UTOX_ENC_ERR_BAD_PASS) {
-                    LOG_ERR("Toxcore", "Couldn't decrypt, wrong password?\r");
-                } else {
-                    LOG_ERR("Toxcore", "Unknown error, please file a bug report!" );
+                switch(decrypt_err) {
+                    case UTOX_ENC_ERR_LENGTH:
+                        LOG_WARN("Toxcore", "Password too short!\r");
+                        break;
+                    case UTOX_ENC_ERR_NULL_PASSWORD:
+                        LOG_ERR("Tox", "Password was null.");
+                        break;
+                    case UTOX_ENC_ERR_BAD_PASS:
+                        LOG_ERR("Toxcore", "Couldn't decrypt, wrong password?\r");
+                        break;
+                    default:
+                        LOG_ERR("Toxcore", "Unknown error, please file a bug report!" );
+                        break;
                 }
+
                 return -1;
             }
 
@@ -348,10 +365,8 @@ static int init_toxcore(Tox **tox) {
     if (save_status == -1) {
         /* Save file exist, couldn't decrypt, don't start a tox instance
         TODO: throw an error to the UI! */
-        panel_profile_password.disabled = false;
-        panel_settings_master.disabled  = true;
-        edit_setfocus(&edit_profile_password);
-        postmessage_utox(REDRAW, 0, 0, NULL);
+        ui_show_page(NULL);
+        //postmessage_utox(REDRAW, 0, 0, NULL);
         return -1;
     } else if (save_status == -2) {
         /* New profile! */
@@ -366,7 +381,8 @@ static int init_toxcore(Tox **tox) {
         }
         edit_resetfocus();
     }
-    postmessage_utox(REDRAW, 0, 0, NULL);
+
+    //postmessage_utox(REDRAW, 0, 0, NULL);
 
     if (settings.use_proxy) {
         topt.proxy_type = TOX_PROXY_TYPE_SOCKS5;
