@@ -8,6 +8,7 @@
 #include "messages.h"
 #include "self.h"
 #include "settings.h"
+#include "tox.h"
 
 #include "layout/background.h"
 #include "layout/create.h"
@@ -742,28 +743,32 @@ static uiControl *settings_profile_page(void) {
     uiBox *hbox = uiNewHorizontalBox();
     uiBoxSetPadded(hbox, 1);
 
-    uiBoxAppend(vbox, uiControl(uiNewLabel("Name")), 0);
+    uiBoxAppend(vbox, uiControl(uiNewLabel(S(NAME))), 0);
     uiEntry *entry_name = uiNewEntry();
+    uiEntrySetText(entry_name, self.name);
     uiBoxAppend(vbox, uiControl(entry_name), 0);
 
-    uiBoxAppend(vbox, uiControl(uiNewLabel("Status")), 0);
+    uiBoxAppend(vbox, uiControl(uiNewLabel(S(STATUS))), 0);
     uiEntry *entry_status = uiNewEntry();
+    uiEntrySetText(entry_status, self.statusmsg);
     uiBoxAppend(vbox, uiControl(entry_status), 0);
 
-    uiBoxAppend(vbox, uiControl(uiNewLabel("Tox ID")), 0);
+    uiBoxAppend(vbox, uiControl(uiNewLabel(S(TOXID))), 0);
     uiEntry *entry_id = uiNewEntry();
+    uiEntrySetReadOnly(entry_id, 1);
+    uiEntrySetText(entry_id, self.id_str);
     uiBoxAppend(vbox, uiControl(entry_id), 0);
 
     uiBoxAppend(vbox, uiControl(hbox), 0);
 
     //TODO: fix copy and show qrs buttons position
-    uiButton *btn_copy = uiNewButton("Copy ID");
+    uiButton *btn_copy = uiNewButton(S(COPY_TOX_ID));
     uiBoxAppend(hbox, uiControl(btn_copy), 0);
 
-    uiButton *btn_show_qr = uiNewButton("Show QR");
+    uiButton *btn_show_qr = uiNewButton(S(SHOW_QR));
     uiBoxAppend(hbox, uiControl(btn_show_qr), 0);
 
-    uiBoxAppend(vbox, uiControl(uiNewLabel("Language")), 0);
+    uiBoxAppend(vbox, uiControl(uiNewLabel(S(LANGUAGE))), 0);
     uiCombobox *cbo_language = uiNewCombobox();
     uiBoxAppend(vbox, uiControl(cbo_language), 0);
 
@@ -786,19 +791,24 @@ static uiControl *settings_interface_page(void) {
     uiCombobox *cbo_dpi = uiNewCombobox();
     uiBoxAppend(hbox, uiControl(cbo_dpi), 0);
 
-    uiCheckbox *chk_history = uiNewCheckbox("Save chat history");
+    uiCheckbox *chk_history = uiNewCheckbox(S(SAVE_CHAT_HISTORY));
+    uiCheckboxSetChecked(chk_history, settings.logging_enabled);
     uiBoxAppend(vbox, uiControl(chk_history), 0);
 
-    uiCheckbox *chk_close = uiNewCheckbox("Close to Tray");
+    uiCheckbox *chk_close = uiNewCheckbox(S(CLOSE_TO_TRAY));
+    uiCheckboxSetChecked(chk_close, settings.close_to_tray);
     uiBoxAppend(vbox, uiControl(chk_close), 0);
 
-    uiCheckbox *chk_start = uiNewCheckbox("Start in tray");
+    uiCheckbox *chk_start = uiNewCheckbox(S(START_IN_TRAY));
+    uiCheckboxSetChecked(chk_start, settings.start_in_tray);
     uiBoxAppend(vbox, uiControl(chk_start), 0);
 
-    uiCheckbox *chk_startup = uiNewCheckbox("Launch at system startup");
+    uiCheckbox *chk_startup = uiNewCheckbox(S(AUTO_STARTUP));
+    uiCheckboxSetChecked(chk_startup, settings.start_with_system);
     uiBoxAppend(vbox, uiControl(chk_startup), 0);
 
-    uiCheckbox *chk_mini = uiNewCheckbox("Use mini contact list");
+    uiCheckbox *chk_mini = uiNewCheckbox(S(SETTINGS_UI_MINI_ROSTER));
+    uiCheckboxSetChecked(chk_mini, settings.use_mini_flist);
     uiBoxAppend(vbox, uiControl(chk_mini), 0);
 
     return uiControl(vbox);
@@ -811,34 +821,34 @@ static uiControl *settings_av_page(void) {
     uiBox *hbox = uiNewHorizontalBox();
     uiBoxSetPadded(hbox, 1);
 
-    uiCheckbox *chk_ptt = uiNewCheckbox("Push to talk");
+    uiCheckbox *chk_ptt = uiNewCheckbox(S(PUSH_TO_TALK));
     uiBoxAppend(vbox, uiControl(chk_ptt), 0);
 
-    uiCheckbox *chk_filtering = uiNewCheckbox("Audtio Fitlering");
+    uiCheckbox *chk_filtering = uiNewCheckbox(S(AUDIOFILTERING));
     uiBoxAppend(vbox, uiControl(chk_filtering), 0);
 
-    uiBoxAppend(vbox, uiControl(uiNewLabel("Audio Input Device")), 0);
+    uiBoxAppend(vbox, uiControl(uiNewLabel(S(AUDIOINPUTDEVICE))), 0);
     uiCombobox *cbo_inputs = uiNewCombobox();
     uiBoxAppend(vbox, uiControl(cbo_inputs), 0);
 
-    uiBoxAppend(vbox, uiControl(uiNewLabel("Audio Output Device")), 0);
+    uiBoxAppend(vbox, uiControl(uiNewLabel(S(AUDIOOUTPUTDEVICE))), 0);
     uiCombobox *cbo_outpus = uiNewCombobox();
     uiBoxAppend(vbox, uiControl(cbo_outpus), 0);
 
-    uiBoxAppend(vbox, uiControl(uiNewLabel("Video Frame Rate (FPS)")), 0);
+    uiBoxAppend(vbox, uiControl(uiNewLabel(S(VIDEOFRAMERATE))), 0);
     uiEntry *entry_fps = uiNewEntry();
     uiBoxAppend(vbox, uiControl(entry_fps), 0);
 
-    uiBoxAppend(vbox, uiControl(uiNewLabel("Video Frame Rate (FPS)")), 0);
+    uiBoxAppend(vbox, uiControl(uiNewLabel(S(VIDEOINPUTDEVICE))), 0);
     uiCombobox *cbo_video = uiNewCombobox();
     uiBoxAppend(vbox, uiControl(cbo_video), 0);
 
     uiBoxAppend(vbox, uiControl(hbox), 0);
 
-    uiButton *btn_audio_preview = uiNewButton("Audio Preview");
+    uiButton *btn_audio_preview = uiNewButton(S(AUDIO_PREVIEW));
     uiBoxAppend(hbox, uiControl(btn_audio_preview), 0);
 
-    uiButton *btn_video_preview = uiNewButton("Video Preview");
+    uiButton *btn_video_preview = uiNewButton(S(VIDEO_PREVIEW));
     uiBoxAppend(hbox, uiControl(btn_video_preview), 0);
 
     return uiControl(vbox);
@@ -853,17 +863,24 @@ static uiControl *settings_notifications_page(void) {
 
     uiBoxAppend(vbox, uiControl(hbox), 0);
 
-    uiCheckbox *chk_ringtone = uiNewCheckbox("Ringtone");
+    uiCheckbox *chk_ringtone = uiNewCheckbox(S(RINGTONE));
+    uiCheckboxSetChecked(chk_ringtone, settings.ringtone_enabled);
     uiBoxAppend(vbox, uiControl(chk_ringtone), 0);
 
-    uiCheckbox *chk_status_notifications = uiNewCheckbox("Status Notifications");
+    uiCheckbox *chk_status_notifications = uiNewCheckbox(S(STATUS_NOTIFICATIONS));
+    uiCheckboxSetChecked(chk_status_notifications, settings.status_notifications);
     uiBoxAppend(vbox, uiControl(chk_status_notifications), 0);
 
-    uiCheckbox *chk_typing_notifications = uiNewCheckbox("Send typing notifications");
+    uiCheckbox *chk_typing_notifications = uiNewCheckbox(S(SEND_TYPING_NOTIFICATIONS));
+    uiCheckboxSetChecked(chk_typing_notifications, settings.send_typing_status);
     uiBoxAppend(vbox, uiControl(chk_typing_notifications), 0);
 
-    uiBoxAppend(vbox, uiControl(uiNewLabel("Group Notifications")), 0);
+    uiBoxAppend(vbox, uiControl(uiNewLabel(S(GROUP_NOTIFICATIONS))), 0);
     uiCombobox *cbo_group_notifications = uiNewCombobox();
+    uiComboboxAppend(cbo_group_notifications, "Off");
+    uiComboboxAppend(cbo_group_notifications, "Mentioned");
+    uiComboboxAppend(cbo_group_notifications, "On");
+    uiComboboxSetSelected(cbo_group_notifications, settings.group_notifications);
     uiBoxAppend(vbox, uiControl(cbo_group_notifications), 0);
 
     return uiControl(vbox);
@@ -876,26 +893,42 @@ static uiControl *settings_advanced_page(void) {
     uiBox *hbox = uiNewHorizontalBox();
     uiBoxSetPadded(hbox, 1);
 
-    uiCheckbox *chk_ipv6 = uiNewCheckbox("IPv6");
+    uiCheckbox *chk_ipv6 = uiNewCheckbox(S(IPV6));
+    uiCheckboxSetChecked(chk_ipv6, settings.enable_ipv6);
     uiBoxAppend(vbox, uiControl(chk_ipv6), 0);
 
-    uiCheckbox *chk_udp = uiNewCheckbox("UDP");
+    uiCheckbox *chk_udp = uiNewCheckbox(S(UDP));
+    uiCheckboxSetChecked(chk_udp, settings.enable_udp);
     uiBoxAppend(vbox, uiControl(chk_udp), 0);
 
-    //TODO: Add IP and port textbox
-    uiCheckbox *chk_proxy = uiNewCheckbox("Proxy (SOCKS 5)");
+    uiCheckbox *chk_proxy = uiNewCheckbox(S(PROXY));
+    uiCheckboxSetChecked(chk_proxy, settings.use_proxy);
     uiBoxAppend(vbox, uiControl(chk_proxy), 0);
 
-    uiCheckbox *chk_force_proxy = uiNewCheckbox("Force uTox to always use proxy");
+    uiBoxAppend(vbox, uiControl(hbox), 0);
+
+    uiEntry *entry_proxy = uiNewEntry();
+    uiEntrySetText(entry_proxy, proxy_address);
+    uiBoxAppend(hbox, uiControl(entry_proxy), 0);
+
+    char proxy_port[4];
+    snprintf(proxy_port, sizeof(proxy_port), "%u", settings.proxy_port);
+
+    uiEntry *entry_port = uiNewEntry();
+    uiEntrySetText(entry_port, proxy_port);
+    uiBoxAppend(hbox, uiControl(entry_port), 0);
+
+    uiCheckbox *chk_force_proxy = uiNewCheckbox(S(PROXY_FORCE));
+    uiCheckboxSetChecked(chk_force_proxy, settings.force_proxy);
     uiBoxAppend(vbox, uiControl(chk_force_proxy), 0);
 
-    uiCheckbox *chk_update = uiNewCheckbox("Automatically Update uTox");
+    uiCheckbox *chk_update = uiNewCheckbox(S(AUTO_UPDATE));
+    uiCheckboxSetChecked(chk_update, settings.auto_update);
     uiBoxAppend(vbox, uiControl(chk_update), 0);
 
-    uiCheckbox *chk_block_requests = uiNewCheckbox("Block Friend Requests");
+    uiCheckbox *chk_block_requests = uiNewCheckbox(S(BLOCK_FRIEND_REQUESTS));
+    uiCheckboxSetChecked(chk_block_requests, settings.block_friend_requests);
     uiBoxAppend(vbox, uiControl(chk_block_requests), 0);
-
-    uiBoxAppend(vbox, uiControl(hbox), 0);
 
     //TODO: do show password and nospam buttons
 
@@ -905,15 +938,15 @@ static uiControl *settings_advanced_page(void) {
 uiControl *ui_settings_page(void){
     uiTab *tabs = uiNewTab();
 
-    uiTabAppend(tabs, "Profile", settings_profile_page());
+    uiTabAppend(tabs, S(PROFILE_BUTTON), settings_profile_page());
     uiTabSetMargined(tabs, 0, 1);
-    uiTabAppend(tabs, "Interface", settings_interface_page());
+    uiTabAppend(tabs, S(USER_INTERFACE_BUTTON), settings_interface_page());
     uiTabSetMargined(tabs, 1, 1);
-    uiTabAppend(tabs, "Audio/Video", settings_av_page());
+    uiTabAppend(tabs, S(AUDIO_VIDEO_BUTTON), settings_av_page());
     uiTabSetMargined(tabs, 2, 1);
-    uiTabAppend(tabs, "Notifications", settings_notifications_page());
+    uiTabAppend(tabs, S(NOTIFICATIONS_BUTTON), settings_notifications_page());
     uiTabSetMargined(tabs, 3, 1);
-    uiTabAppend(tabs, "Advanced", settings_advanced_page());
+    uiTabAppend(tabs, S(ADVANCED_BUTTON), settings_advanced_page());
     uiTabSetMargined(tabs, 4, 1);
 
     return uiControl(tabs);
@@ -977,10 +1010,10 @@ uiControl *ui_sidebar(void){
     uiGridAppend(grid, uiControl(name), 1, 0, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
     uiGridAppend(grid, uiControl(status), 1, 1, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
 
-    uiButton *btn_contact_sort = uiNewButton("All Contacts");
+    uiButton *btn_contact_sort = uiNewButton(S(FILTER_ALL));
     uiGridAppend(grid, uiControl(btn_contact_sort), 0, 2, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
 
-    for (int i = 0; i < self.friend_list_count; i++){
+    for (size_t i = 0; i < self.friend_list_count; i++){
         FRIEND *f = get_friend(i);
         if (!f) {
             continue;
@@ -989,7 +1022,7 @@ uiControl *ui_sidebar(void){
         sidebar_create_friend(f);
     }
 
-    for (int i = 0; i < self.groups_list_count; i++) {
+    for (size_t i = 0; i < self.groups_list_count; i++) {
         GROUPCHAT *g = get_group(i);
         if (!g) {
             continue;
@@ -1027,7 +1060,20 @@ bool ui_init(int width, int height){
 	uiOnShouldQuit(ui_should_quit, main_window);
 
     uiControl *settings_page = ui_settings_page();
-    uiWindowSetChild(main_window, uiControl(settings_page));
+    uiWindowSetChild(main_window, settings_page);
+
+    /*
+    uiGrid *grid = uiNewGrid();
+    uiGridSetPadded(grid, 1);
+
+    //uiControl *sidebar = ui_sidebar();
+
+    uiWindowSetChild(main_window, uiControl(grid));
+
+    //uiGridAppend(grid, sidebar, 0, 0, SIDEBAR_SIZE, settings.window_height, 0, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend(grid, settings_page, SIDEBAR_SIZE, 0, settings.window_width - SIDEBAR_SIZE, settings.window_height, 0, uiAlignFill, 0, uiAlignFill);
+    */
+
 	uiControlShow(uiControl(main_window));
 
 	uiMain();

@@ -914,3 +914,9 @@ msgstr("Are you sure you want to delete ")
 
 msgid(KEEP)
 msgstr("Keep")
+
+msgid(AUDIO_PREVIEW)
+msgstr("Audio Preview")
+
+msgid(VIDEO_PREVIEW)
+msgstr("Video Preview")

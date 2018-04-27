@@ -416,37 +416,9 @@ UTOX_SAVE *config_load(void) {
 
     /* UX Settings */
 
-    dropdown_language.selected = dropdown_language.over = settings.language = save->language;
+    settings.language = save->language;
 
-    dropdown_dpi.selected = dropdown_dpi.over = save->scale - 5;
-
-    switch_save_chat_history.switch_on = save->logging_enabled;
-    switch_close_to_tray.switch_on     = save->close_to_tray;
-    switch_start_in_tray.switch_on     = save->start_in_tray;
-    switch_mini_contacts.switch_on     = save->use_mini_flist;
-    switch_magic_sidebar.switch_on     = save->magic_flist_enabled;
-
-    switch_ipv6.switch_on             = save->enableipv6;
-    switch_udp.switch_on              = !save->disableudp;
-    switch_udp.panel.disabled         = save->force_proxy;
-    switch_proxy.switch_on            = save->proxyenable;
-    switch_proxy_force.switch_on      = save->force_proxy;
-    switch_proxy_force.panel.disabled = !save->proxyenable;
-
-    switch_auto_startup.switch_on       = save->auto_startup;
-    switch_auto_update.switch_on        = save->auto_update;
-
-    settings.group_notifications = dropdown_global_group_notifications.selected =
-        dropdown_global_group_notifications.over = save->group_notifications;
-
-    switch_audible_notifications.switch_on = save->audible_notifications_enabled;
-    switch_audio_filtering.switch_on       = save->audio_filtering_enabled;
-    switch_push_to_talk.switch_on          = save->push_to_talk;
-    switch_status_notifications.switch_on  = save->status_notifications;
-
-    dropdown_theme.selected = dropdown_theme.over = save->theme;
-
-    switch_typing_notes.switch_on = !save->no_typing_notifications;
+    settings.group_notifications = save->group_notifications;
 
     flist_set_filter(save->filter); /* roster list filtering */
 
@@ -458,19 +430,7 @@ UTOX_SAVE *config_load(void) {
     settings.force_proxy = save->force_proxy;
 
     if (strlen((char *)save->proxy_ip) <= proxy_address_size){
-        strcpy((char *)proxy_address, (char *)save->proxy_ip);
-    }
-
-    edit_proxy_ip.length = strlen((char *)save->proxy_ip);
-
-    strcpy((char *)edit_proxy_ip.data, (char *)save->proxy_ip);
-
-    if (save->proxy_port) {
-        edit_proxy_port.length =
-            snprintf((char *)edit_proxy_port.data, edit_proxy_port.maxlength + 1, "%u", save->proxy_port);
-        if (edit_proxy_port.length >= edit_proxy_port.maxlength + 1) {
-            edit_proxy_port.length = edit_proxy_port.maxlength;
-        }
+        strcpy(proxy_address, (char *)save->proxy_ip);
     }
 
     /* UX settings */

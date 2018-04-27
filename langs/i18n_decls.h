@@ -330,6 +330,8 @@ typedef enum {
     STR_STATUS_NOTIFICATIONS,
     STR_DELETE_MESSAGE,
     STR_KEEP,
+    STR_AUDIO_PREVIEW,
+    STR_VIDEO_PREVIEW,
 
     NUM_STRS // add strings before this line
 } UTOX_I18N_STR;
