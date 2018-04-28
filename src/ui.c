@@ -6,9 +6,14 @@
 #include "inline_video.h"
 #include "macros.h"
 #include "messages.h"
+#include "screen_grab.h"
 #include "self.h"
 #include "settings.h"
 #include "tox.h"
+#include "updater.h"
+
+#include "av/utox_av.h"
+#include "av/video.h"
 
 #include "layout/background.h"
 #include "layout/create.h"
@@ -19,6 +24,7 @@
 #include "layout/sidebar.h"
 
 #include "native/image.h"
+#include "native/keyboard.h"
 #include "native/ui.h"
 
 #include "ui/button.h"
@@ -32,6 +38,7 @@
 #include "ui/text.h"
 #include "ui/tooltip.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <ui.h>
 
@@ -144,97 +151,6 @@ static void sidepanel_FLIST(void) {
     button_add_new_contact.panel.disabled = true;
 }
 
-
-static void settings_PROFILE(void) {
-    panel_settings_profile.y = 32;
-
-    CREATE_EDIT(name, 10, 30, -10, 24);
-
-    CREATE_EDIT(status_msg, 10, 85, -10, 24);
-
-    CREATE_EDIT(toxid, 10, 140, -10, 24);
-    CREATE_BUTTON(copyid, 66, 117, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-
-    CREATE_DROPDOWN(language, 10, 195, 24, -10);
-}
-
-static void settings_UI(void) {
-    panel_settings_ui.y            = 32;
-
-    CREATE_DROPDOWN(theme, 10, 30, 24, 120);
-
-    CREATE_DROPDOWN(dpi,   150, 30, 24, 200);
-
-    CREATE_SWITCH(save_chat_history, 10, 60,  _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(close_to_tray,     10, 90,  _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(start_in_tray,     10, 120, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(auto_startup,      10, 150, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(mini_contacts,     10, 180, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-}
-
-static void settings_AV(void) {
-    panel_settings_av.y = 32;
-
-    CREATE_SWITCH(push_to_talk, 10, 10, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-
-    #ifndef AUDIO_FILTERING
-        const uint16_t start_draw_y = 30;
-        const uint16_t preview_button_pos_y = 245;
-    #else
-        const uint16_t start_draw_y = 60;
-        const uint16_t preview_button_pos_y = 275;
-        CREATE_SWITCH(audio_filtering, 10, 40, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    #endif
-
-
-    const uint16_t draw_y_vect = 30;
-    CREATE_DROPDOWN(audio_in,  10, (start_draw_y + draw_y_vect + 5), 24, 360);
-    CREATE_DROPDOWN(audio_out, 10, (start_draw_y + draw_y_vect + 57), 24, 360);
-    CREATE_EDIT(video_fps,     10, (start_draw_y + draw_y_vect + 110), 360, 24);
-    CREATE_DROPDOWN(video,     10, (start_draw_y + draw_y_vect + 162), 24, 360);
-
-    CREATE_BUTTON(callpreview,  10, (preview_button_pos_y + 35), _BM_LBUTTON_WIDTH, _BM_LBUTTON_HEIGHT);
-    CREATE_BUTTON(videopreview, 70, (preview_button_pos_y + 35), _BM_LBUTTON_WIDTH, _BM_LBUTTON_HEIGHT);
-}
-
-static void settings_NOTIFY(void) {
-    panel_settings_notifications.y = 32;
-
-    CREATE_SWITCH(audible_notifications,        10,  10, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(status_notifications,         10,  40, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(typing_notes,                 10,  70, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_DROPDOWN(global_group_notifications, 10, 125,               24,               100);
-}
-
-static void settings_ADV(void) {
-    panel_settings_adv.y = 32;
-
-    CREATE_SWITCH(ipv6, 10, 27, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(udp,  10, 57, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-
-    CREATE_SWITCH(proxy,       10, 87,  _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_EDIT(proxy_ip,      230, 87, 120, 24);
-    CREATE_EDIT(proxy_port,    360, 87, 60,  24);
-    CREATE_SWITCH(proxy_force, 10, 117, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-
-    CREATE_SWITCH(auto_update,           10, 147, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-    CREATE_SWITCH(block_friend_requests, 10, 177, _BM_SWITCH_WIDTH, _BM_SWITCH_HEIGHT);
-
-    CREATE_BUTTON(show_password_settings, 10,  207, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-
-    const int show_nospam_x = 30 + UN_SCALE(MAX(UTOX_STR_WIDTH(SHOW_UI_PASSWORD), UTOX_STR_WIDTH(HIDE_UI_PASSWORD)));
-    CREATE_BUTTON(show_nospam, show_nospam_x, 207, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-
-    CREATE_EDIT(nospam,           10,  265, -10, 24);
-    CREATE_BUTTON(change_nospam,  10,  295, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-
-    const int revert_nospam_x = 30 + UN_SCALE(UTOX_STR_WIDTH(RANDOMIZE_NOSPAM));
-    CREATE_BUTTON(revert_nospam, revert_nospam_x, 295, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-
-    CREATE_EDIT(profile_password, 10,  85, -10, 24);
-    CREATE_BUTTON(lock_uTox,      10,  295, _BM_SBUTTON_WIDTH, _BM_SBUTTON_HEIGHT);
-}
-
 void ui_set_scale(uint8_t scale) {
     if (scale >= 5 && scale <= 25) {
         ui_scale = scale;
@@ -277,12 +193,6 @@ void ui_rescale(uint8_t scale) {
 
     sidepanel_USERBADGE();
     sidepanel_FLIST();
-
-    settings_PROFILE();
-    settings_UI();
-    settings_AV();
-    settings_NOTIFY();
-    settings_ADV();
 
     // FIXME for testing, remove
     CREATE_BUTTON(notify_create, 2, 2, BM_SBUTTON_WIDTH, BM_SBUTTON_HEIGHT);
@@ -753,6 +663,18 @@ static int ui_should_quit(void *data){
     return 1;
 }
 
+static void btn_copy_clicked(uiButton *UNUSED(button), void *UNUSED(data)){
+
+}
+
+static void btn_show_qr_clicked(uiButton *UNUSED(button), void *UNUSED(data)){
+
+}
+
+static void cbo_language_on_select(uiCombobox *UNUSED(combox), void *UNUSED(data)){
+
+}
+
 static uiControl *settings_profile_page(void) {
     uiBox *vbox = uiNewVerticalBox();
     uiBoxSetPadded(vbox, 1);
@@ -780,13 +702,16 @@ static uiControl *settings_profile_page(void) {
 
     //TODO: fix copy and show qrs buttons position
     uiButton *btn_copy = uiNewButton(S(COPY_TOX_ID));
+    uiButtonOnClicked(btn_copy, btn_copy_clicked, NULL);
     uiBoxAppend(hbox, uiControl(btn_copy), 0);
 
     uiButton *btn_show_qr = uiNewButton(S(SHOW_QR));
+    uiButtonOnClicked(btn_show_qr, btn_show_qr_clicked, NULL);
     uiBoxAppend(hbox, uiControl(btn_show_qr), 0);
 
     uiBoxAppend(vbox, uiControl(uiNewLabel(S(LANGUAGE))), 0);
     uiCombobox *cbo_language = uiNewCombobox();
+    uiComboboxOnSelected(cbo_language, cbo_language_on_select, NULL);
     uiBoxAppend(vbox, uiControl(cbo_language), 0);
 
     return uiControl(vbox);
@@ -876,10 +801,32 @@ static uiControl *settings_interface_page(void) {
 
 static void chk_ptt_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
     settings.push_to_talk = uiCheckboxChecked(checkbox);
+    if (!settings.push_to_talk) {
+        init_ptt();
+    } else {
+        exit_ptt();
+    }
 }
 
 static void chk_filtering_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
     settings.audiofilter_enabled = uiCheckboxChecked(checkbox);
+}
+
+static void cbo_inputs_on_select(uiCombobox *combobox, void *UNUSED(data)){
+    int selected = uiComboboxSelected(combobox);
+}
+
+static void cbo_outputs_on_select(uiCombobox *combobox, void *UNUSED(data)){
+    int selected = uiComboboxSelected(combobox);
+}
+
+static void cbo_video_on_select(uiCombobox *combobox, void *UNUSED(data)){
+    int selected = uiComboboxSelected(combobox);
+    if (selected == 1) {
+        utox_screen_grab_desktop(1);
+    } else {
+        postmessage_utoxav(UTOXAV_SET_VIDEO_IN, selected, 0, NULL);
+    }
 }
 
 static void btn_audio_preview_clicked(uiButton *UNUSED(button), void *UNUSED(data)){
@@ -909,10 +856,12 @@ static uiControl *settings_av_page(void) {
 
     uiBoxAppend(vbox, uiControl(uiNewLabel(S(AUDIOINPUTDEVICE))), 0);
     uiCombobox *cbo_inputs = uiNewCombobox();
+    uiComboboxOnSelected(cbo_inputs, cbo_inputs_on_select, NULL);
     uiBoxAppend(vbox, uiControl(cbo_inputs), 0);
 
     uiBoxAppend(vbox, uiControl(uiNewLabel(S(AUDIOOUTPUTDEVICE))), 0);
     uiCombobox *cbo_outputs = uiNewCombobox();
+    uiComboboxOnSelected(cbo_outputs, cbo_outputs_on_select, NULL);
     uiBoxAppend(vbox, uiControl(cbo_outputs), 0);
 
     uiBoxAppend(vbox, uiControl(uiNewLabel(S(VIDEOFRAMERATE))), 0);
@@ -921,6 +870,7 @@ static uiControl *settings_av_page(void) {
 
     uiBoxAppend(vbox, uiControl(uiNewLabel(S(VIDEOINPUTDEVICE))), 0);
     uiCombobox *cbo_video = uiNewCombobox();
+    uiComboboxOnSelected(cbo_video, cbo_video_on_select, NULL);
     uiBoxAppend(vbox, uiControl(cbo_video), 0);
 
     uiBoxAppend(vbox, uiControl(hbox), 0);
@@ -952,7 +902,7 @@ static void chk_ringtone_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
     settings.ringtone_enabled = uiCheckboxChecked(checkbox);
 }
 
-static uiControl *settings_notifications_page(void) {
+static uiControl *settings_notifications_page(void){
     uiBox *vbox = uiNewVerticalBox();
     uiBoxSetPadded(vbox, 1);
 
@@ -996,16 +946,46 @@ static void chk_udp_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
     settings.enable_udp = uiCheckboxChecked(checkbox);
 }
 
-static void chk_proxy_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+static void chk_proxy_toggle(uiCheckbox *checkbox, void *data){
+    uiCheckbox *chk_force_proxy = (uiCheckbox *)data;
+
     settings.use_proxy = uiCheckboxChecked(checkbox);
+
+    if (!settings.use_proxy) {
+        settings.force_proxy = false;
+        uiCheckboxSetChecked(chk_force_proxy, 0);
+    }
+
+    //TODO: get proxy address and port
+    /* memcpy(proxy_address, edit_proxy_ip.data, edit_proxy_ip.length); */
+    /* proxy_address[edit_proxy_ip.length] = 0; */
+
+    /* edit_proxy_port.data[edit_proxy_port.length] = 0; */
+    /* settings.proxy_port = strtol((char *)edit_proxy_port.data, NULL, 0); */
+
+    tox_settingschanged();
 }
 
-static void chk_force_proxy_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
+static void chk_force_proxy_toggle(uiCheckbox *checkbox, void *data){
+    uiCheckbox *chk_udp = (uiCheckbox *) data;
+
     settings.force_proxy = uiCheckboxChecked(checkbox);
+
+    if (settings.force_proxy) {
+        uiCheckboxSetChecked(chk_udp, 0);
+        settings.enable_udp       = false;
+    }
+
+    //TODO: get proxy and port
+    /* edit_proxy_port.data[edit_proxy_port.length] = 0; */
+    /* settings.proxy_port = strtol((char *)edit_proxy_port.data, NULL, 0); */
+
+    tox_settingschanged();
 }
 
 static void chk_update_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
     settings.auto_update = uiCheckboxChecked(checkbox);
+    updater_start(0);
 }
 
 static void chk_block_requests_toggle(uiCheckbox *checkbox, void *UNUSED(data)){
@@ -1070,6 +1050,7 @@ static uiControl *settings_advanced_page(void) {
 uiControl *ui_settings_page(void){
     uiTab *tabs = uiNewTab();
 
+    //TODO: draw header with toxcore information
     uiTabAppend(tabs, S(PROFILE_BUTTON), settings_profile_page());
     uiTabSetMargined(tabs, 0, 1);
     uiTabAppend(tabs, S(USER_INTERFACE_BUTTON), settings_interface_page());
@@ -1164,6 +1145,17 @@ uiControl *ui_sidebar(void){
 
         sidebar_create_group(g);
     }
+
+    return uiControl(hbox);
+}
+
+//TODO: implement message page
+uiControl *ui_message_page(void){
+    uiBox *hbox = uiNewHorizontalBox();
+    uiBoxSetPadded(hbox, 1);
+
+    uiDrawTextLayoutParams *params;
+    uiDrawTextLayout *layout = uiDrawNewTextLayout(params);
 
     return uiControl(hbox);
 }

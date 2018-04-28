@@ -5,12 +5,6 @@
 #include "groups.h"
 #include "tox.h"
 
-// TODO do we want to include the UI headers here?
-// Or would it be better to supply a callback after settings are loaded?
-#include "ui/edit.h"
-#include "ui/switch.h"
-#include "ui/dropdown.h"
-
 #include "layout/settings.h"
 
 #include "native/filesys.h"
@@ -457,17 +451,10 @@ UTOX_SAVE *config_load(void) {
     loaded_audio_in_device        = save->audio_device_in;
 
     settings.auto_update          = save->auto_update;
-    switch_auto_update.switch_on  = save->auto_update;
     settings.update_to_develop    = save->update_to_develop;
     settings.send_version         = save->send_version;
 
     settings.video_fps = save->video_fps ? save->video_fps : 25;
-
-    edit_video_fps.length =
-        snprintf((char *)edit_video_fps.data, edit_video_fps.maxlength + 1, "%u", save->video_fps);
-    if (edit_video_fps.length > edit_video_fps.maxlength) {
-        edit_video_fps.length = edit_video_fps.maxlength;
-    }
 
     // TODO: Don't clobber (and start saving) commandline flags.
 
@@ -475,8 +462,6 @@ UTOX_SAVE *config_load(void) {
     if (settings.theme == UINT32_MAX) {
         settings.theme = save->theme;
     }
-
-    ui_set_scale(save->scale);
 
     if (save->push_to_talk) {
         init_ptt();
@@ -496,8 +481,8 @@ void config_save(UTOX_SAVE *save_in) {
     save->window_height                 = save_in->window_height;
 
     save->save_version                  = UTOX_SAVE_VERSION;
-    save->scale                         = ui_scale;
-    save->proxyenable                   = switch_proxy.switch_on;
+    //save->scale                         = ui_scale;
+    save->proxyenable                   = settings.use_proxy;
     save->audible_notifications_enabled = settings.ringtone_enabled;
     save->audio_filtering_enabled       = settings.audiofilter_enabled;
     save->push_to_talk                  = settings.push_to_talk;
@@ -521,8 +506,8 @@ void config_save(UTOX_SAVE *save_in) {
     save->proxy_port                    = settings.proxy_port;
     save->force_proxy                   = settings.force_proxy;
 
-    save->audio_device_in               = dropdown_audio_in.selected;
-    save->audio_device_out              = dropdown_audio_out.selected;
+    save->audio_device_in               = loaded_audio_in_device;
+    save->audio_device_out              = loaded_audio_out_device;
     save->theme                         = settings.theme;
 
     save->utox_last_version             = settings.curr_version;

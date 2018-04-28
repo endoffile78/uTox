@@ -213,6 +213,8 @@ uiControl *ui_password_page(void);
 
 uiControl *ui_sidebar(void);
 
+uiControl *ui_message_page(void);
+
 void ui_show_page(uiControl *control);
 
 void ui_hide_page(uiControl *control);
