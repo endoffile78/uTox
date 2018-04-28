@@ -1205,7 +1205,7 @@ bool ui_init(int width, int height){
 	uiBoxSetPadded(vbox, 1);
 
 	uiBoxAppend(hbox, uiControl(vbox), 1);
-    uiBoxAppend(vbox, uiControl(settings_page), 0);
+    uiBoxAppend(vbox, uiControl(settings_page), 1);
 
 	uiControlShow(uiControl(main_window));
 
