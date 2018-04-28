@@ -1155,6 +1155,8 @@ uiControl *ui_message_page(void){
     uiBoxSetPadded(hbox, 1);
 
     uiDrawTextLayoutParams *params;
+    memset(params, 0, sizeof(uiDrawTextLayoutParams));
+
     uiDrawTextLayout *layout = uiDrawNewTextLayout(params);
 
     return uiControl(hbox);
@@ -1185,20 +1187,25 @@ bool ui_init(int width, int height){
 
 	uiOnShouldQuit(ui_should_quit, main_window);
 
+    uiControl *sidebar = ui_sidebar();
     uiControl *settings_page = ui_settings_page();
-    uiWindowSetChild(main_window, settings_page);
 
-    /*
-    uiGrid *grid = uiNewGrid();
-    uiGridSetPadded(grid, 1);
+	uiBox *hbox = uiNewHorizontalBox();
+    uiWindowSetChild(main_window, uiControl(hbox));
+	uiBoxSetPadded(hbox, 1);
 
-    //uiControl *sidebar = ui_sidebar();
+	uiBox *vbox = uiNewVerticalBox();
+	uiBoxSetPadded(vbox, 1);
+	uiBoxAppend(hbox, uiControl(vbox), 0);
 
-    uiWindowSetChild(main_window, uiControl(grid));
+    uiBoxAppend(vbox, sidebar, 0);
+	uiBoxAppend(hbox, uiControl(uiNewVerticalSeparator()), 0);
 
-    //uiGridAppend(grid, sidebar, 0, 0, SIDEBAR_SIZE, settings.window_height, 0, uiAlignFill, 0, uiAlignFill);
-    uiGridAppend(grid, settings_page, SIDEBAR_SIZE, 0, settings.window_width - SIDEBAR_SIZE, settings.window_height, 0, uiAlignFill, 0, uiAlignFill);
-    */
+	vbox = uiNewVerticalBox();
+	uiBoxSetPadded(vbox, 1);
+
+	uiBoxAppend(hbox, uiControl(vbox), 1);
+    uiBoxAppend(vbox, uiControl(settings_page), 0);
 
 	uiControlShow(uiControl(main_window));
 

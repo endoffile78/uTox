@@ -201,7 +201,8 @@ double ui_scale;
 #define TIME_WIDTH_LONG 60
 #define NAME_OFFSET 14
 
-#define SIDEBAR_SIZE 20
+#define HEADER_HEIGHT 20
+#define SIDEBAR_WIDTH 20
 
 extern char *entry_password_text;
 
