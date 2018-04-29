@@ -363,23 +363,18 @@ static int init_toxcore(Tox **tox) {
 
     // TODO tox.c shouldn't be interacting with the UI on this level
     if (save_status == -1) {
-        /* Save file exist, couldn't decrypt, don't start a tox instance
-        TODO: throw an error to the UI! */
-        ui_show_page(NULL);
-        //postmessage_utox(REDRAW, 0, 0, NULL);
+        /* Save file exist, couldn't decrypt, don't start a tox instance */
+        ui_show_page(AREA_MAIN_PAGE, PAGE_PASSWORD);
         return -1;
     } else if (save_status == -2) {
         /* New profile! */
-        panel_profile_password.disabled = true;
-        panel_settings_master.disabled  = false;
+        ui_show_page(AREA_MAIN_PAGE, PAGE_SETTINGS);
     } else {
-        panel_profile_password.disabled = true;
         if (settings.show_splash) {
-            panel_splash_page.disabled = false;
+            ui_show_page(AREA_MAIN_PAGE, PAGE_SPLASH);
         } else {
-            panel_settings_master.disabled = false;
+            ui_show_page(AREA_MAIN_PAGE, PAGE_SETTINGS);
         }
-        edit_resetfocus();
     }
 
     //postmessage_utox(REDRAW, 0, 0, NULL);
@@ -459,6 +454,10 @@ void toxcore_thread(void *UNUSED(args)) {
     ToxAV *av               = NULL;
     bool   reconfig         = 1;
     int    toxcore_init_err = 0;
+
+    while (!ui_initialized) {
+        yieldcpu(1);
+    }
 
     while (reconfig) {
         reconfig = 0;

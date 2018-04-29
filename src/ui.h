@@ -205,6 +205,19 @@ double ui_scale;
 #define SIDEBAR_WIDTH 20
 
 extern char *entry_password_text;
+extern bool ui_initialized;
+
+typedef enum {
+    AREA_SIDEBAR,
+    AREA_MAIN_PAGE,
+} AREA;
+
+typedef enum {
+    PAGE_PASSWORD,
+    PAGE_SETTINGS,
+    PAGE_MESSAGES,
+    PAGE_SPLASH,
+} PAGE_TYPE;
 
 bool ui_init(int width, int height);
 
@@ -216,8 +229,10 @@ uiControl *ui_sidebar(void);
 
 uiControl *ui_message_page(void);
 
-void ui_show_page(uiControl *control);
+uiControl *ui_splash_page(void);
 
-void ui_hide_page(uiControl *control);
+void ui_show_page(AREA area, PAGE_TYPE page);
+
+void ui_hide_page(AREA area);
 
 #endif

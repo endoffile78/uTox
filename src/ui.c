@@ -42,7 +42,18 @@
 #include <string.h>
 #include <ui.h>
 
+#define UI_SIDEBAR_INDEX 0
+#define UI_MAIN_INDEX 0
+
 char *entry_password_text = NULL;
+
+//These need to be global for ui_show_page and ui_hide_page
+static uiBox *sidebar_vbox;
+static uiBox *main_vbox;
+
+static PAGE_TYPE current_page;
+
+bool ui_initialized = false;
 
 static UTOX_I18N_STR themedrops[] = {
     STR_THEME_DEFAULT,
@@ -1162,12 +1173,67 @@ uiControl *ui_message_page(void){
     return uiControl(hbox);
 }
 
-void ui_show_page(uiControl *control){
-    (void) control;
+//TODO: Implement splash page
+uiControl *ui_splash_page(void){
+    return NULL;
 }
 
-void ui_hide_page(uiControl *control){
-    (void) control;
+//TODO: see if this can be simplified
+void ui_show_page(AREA area, PAGE_TYPE page){
+    if (page == current_page) {
+        return;
+    }
+
+    uiBox *box = NULL;
+    switch (area) {
+        case AREA_SIDEBAR:
+            box = sidebar_vbox;
+            break;
+        case AREA_MAIN_PAGE:
+            box = main_vbox;
+            break;
+        default:
+            LOG_ERR("UI", "Unknown area.");
+            return;
+    }
+
+    ui_hide_page(area);
+
+    uiControl *control = NULL;
+    switch (page) {
+        case PAGE_PASSWORD:
+            control = ui_password_page();
+            break;
+        case PAGE_SETTINGS:
+            control = ui_settings_page();
+            break;
+        case PAGE_MESSAGES:
+            control = ui_message_page();
+            break;
+        case PAGE_SPLASH:
+            control = ui_splash_page();
+            break;
+        default:
+            LOG_ERR("UI", "Requested page unknown.");
+            return;
+    }
+
+    uiBoxAppend(box, control, 1);
+    current_page = page;
+}
+
+void ui_hide_page(AREA area){
+    switch (area) {
+        case AREA_SIDEBAR:
+            uiBoxDelete(sidebar_vbox, UI_SIDEBAR_INDEX);
+            break;
+        case AREA_MAIN_PAGE:
+            uiBoxDelete(main_vbox, UI_MAIN_INDEX);
+            break;
+        default:
+            LOG_ERR("UI", "Unknown page requested to be hidden.");
+            return;
+    }
 }
 
 bool ui_init(int width, int height){
@@ -1194,20 +1260,23 @@ bool ui_init(int width, int height){
     uiWindowSetChild(main_window, uiControl(hbox));
 	uiBoxSetPadded(hbox, 1);
 
-	uiBox *vbox = uiNewVerticalBox();
-	uiBoxSetPadded(vbox, 1);
-	uiBoxAppend(hbox, uiControl(vbox), 0);
+	sidebar_vbox = uiNewVerticalBox();
+	uiBoxSetPadded(sidebar_vbox, 1);
+	uiBoxAppend(hbox, uiControl(sidebar_vbox), 0);
+    uiBoxAppend(sidebar_vbox, sidebar, 0);
 
-    uiBoxAppend(vbox, sidebar, 0);
 	uiBoxAppend(hbox, uiControl(uiNewVerticalSeparator()), 0);
 
-	vbox = uiNewVerticalBox();
-	uiBoxSetPadded(vbox, 1);
+	main_vbox = uiNewVerticalBox();
+	uiBoxSetPadded(main_vbox, 1);
 
-	uiBoxAppend(hbox, uiControl(vbox), 1);
-    uiBoxAppend(vbox, uiControl(settings_page), 1);
+	uiBoxAppend(hbox, uiControl(main_vbox), 1);
+    uiBoxAppend(main_vbox, uiControl(settings_page), 1);
 
 	uiControlShow(uiControl(main_window));
+
+    current_page = PAGE_SETTINGS;
+    ui_initialized = true;
 
 	uiMain();
     LOG_DEBUG("UI", "Calling uiUninit.");
