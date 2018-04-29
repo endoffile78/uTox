@@ -13,20 +13,18 @@ For any and all of the following, you'll need to have [toxcore](https://github.c
 
 Dependencies:
 
-|   Name       | Required |
+| Name         | Required |
 |--------------|----------|
-| cmake >= 3.2 |   yes    |
-| dbus         |   no     |
-| filter_audio |   no     |
-| freetype     |   yes    |
-| GTK          |   no (runtime only) |
-| opus         |   yes    |
-| libvpx       |   yes    |
-| openal       |   yes    |
-| toxcore      |   yes    |
-| v4l          |   yes    |
-| xext         |   yes    |
-| xrender      |   yes    |
+| cmake >= 3.2 | yes      |
+| dbus         | no       |
+| filter_audio | no       |
+| freetype     | yes      |
+| libui        | yes      |
+| opus         | yes      |
+| libvpx       | yes      |
+| openal       | yes      |
+| toxcore      | yes      |
+| v4l          | yes      |
 
 1. First compile:
 
