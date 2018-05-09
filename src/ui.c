@@ -984,7 +984,7 @@ static void chk_force_proxy_toggle(uiCheckbox *checkbox, void *data){
 
     if (settings.force_proxy) {
         uiCheckboxSetChecked(chk_udp, 0);
-        settings.enable_udp       = false;
+        settings.enable_udp = false;
     }
 
     //TODO: get proxy and port
@@ -1165,10 +1165,10 @@ uiControl *ui_message_page(void){
     uiBox *hbox = uiNewHorizontalBox();
     uiBoxSetPadded(hbox, 1);
 
-    uiDrawTextLayoutParams *params;
-    memset(params, 0, sizeof(uiDrawTextLayoutParams));
+    uiDrawTextLayoutParams params;
+    memset(&params, 0, sizeof(uiDrawTextLayoutParams));
 
-    uiDrawTextLayout *layout = uiDrawNewTextLayout(params);
+    uiDrawTextLayout *layout = uiDrawNewTextLayout(&params);
 
     return uiControl(hbox);
 }
