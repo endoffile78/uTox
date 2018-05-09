@@ -455,26 +455,6 @@ void loadalpha(int bm, void *data, int width, int height) {
     bitmap[bm] = ximage_to_picture(img, XRenderFindStandardFormat(display, PictStandardA8));
 }
 
-/* generates an alpha bitmask based on the alpha channel in given rgba_data
- * returned picture will have 1 byte for each pixel, and have the same width and height as input
- */
-static Picture generate_alpha_bitmask(const uint8_t *rgba_data, uint16_t width, uint16_t height, uint32_t rgba_size) {
-    // we don't need to free this, that's done by XDestroyImage()
-    uint8_t *out = malloc(rgba_size / 4);
-    uint32_t i, j;
-    for (i = j = 0; i < rgba_size; i += 4, j++) {
-        out[j] = (rgba_data + i)[3] & 0xFF; // take only alpha values
-    }
-
-    // create 1-byte-per-pixel image and convert it to a Alpha-format Picture
-    XImage *img     = XCreateImage(display, CopyFromParent, 8, ZPixmap, 0, (char *)out, width, height, 8, width);
-    Picture picture = ximage_to_picture(img, XRenderFindStandardFormat(display, PictStandardA8));
-
-    XDestroyImage(img);
-
-    return picture;
-}
-
 NATIVE_IMAGE *utox_image_to_native(const UTOX_IMAGE data, size_t size, uint16_t *w, uint16_t *h, bool keep_alpha) {
     return NULL;
 }
